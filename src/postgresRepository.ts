@@ -69,7 +69,7 @@ export class PostgresCheckoutRepository implements CheckoutRepository {
         updated_at = now()
       WHERE id = $1
       RETURNING *`,
-      checkoutParams(checkout),
+      checkoutParams(checkout).slice(0, 20),
     );
     return checkoutFromRow(row);
   }
