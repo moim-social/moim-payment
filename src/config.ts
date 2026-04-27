@@ -1,16 +1,4 @@
-import { z } from "zod";
-import type { ProviderAccount } from "./types.js";
-
-const providerAccountSchema = z.object({
-  id: z.string().min(1),
-  provider: z.literal("portone"),
-  paymentMethodFamily: z.literal("easy_pay"),
-  easyPayProvider: z.enum(["kakaopay", "tosspay", "naverpay"]),
-  displayName: z.string().min(1),
-  storeId: z.string().min(1),
-  channelKey: z.string().min(1),
-  enabled: z.boolean(),
-});
+import type { PortOneEasyPayProvider, ProviderAccount } from "./types.js";
 
 const defaultProviderAccounts: ProviderAccount[] = [
   {
@@ -58,9 +46,7 @@ export interface AppConfig {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
-  const providerAccounts = env.PROVIDER_ACCOUNTS_JSON
-    ? z.array(providerAccountSchema).parse(JSON.parse(env.PROVIDER_ACCOUNTS_JSON))
-    : defaultProviderAccounts;
+  const providerAccounts = buildProviderAccounts(env);
 
   return {
     port: Number(env.PORT ?? 8080),
@@ -75,5 +61,64 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       .map((origin) => origin.trim())
       .filter(Boolean),
     providerAccounts,
+  };
+}
+
+function buildProviderAccounts(env: NodeJS.ProcessEnv): ProviderAccount[] {
+  const enabledProviders = new Set(
+    (env.DEFAULT_ENABLED_EASY_PAY_PROVIDERS ?? "kakaopay,tosspay")
+      .split(",")
+      .map((provider) => provider.trim())
+      .filter(Boolean),
+  );
+
+  const accounts = [
+    buildProviderAccount({
+      easyPayProvider: "kakaopay",
+      displayName: "카카오페이",
+      storeId: env.PORTONE_KAKAOPAY_STORE_ID,
+      channelKey: env.PORTONE_KAKAOPAY_CHANNEL_KEY,
+      enabled: enabledProviders.has("kakaopay"),
+    }),
+    buildProviderAccount({
+      easyPayProvider: "tosspay",
+      displayName: "토스페이",
+      storeId: env.PORTONE_TOSSPAY_STORE_ID,
+      channelKey: env.PORTONE_TOSSPAY_CHANNEL_KEY,
+      enabled: enabledProviders.has("tosspay"),
+    }),
+    buildProviderAccount({
+      easyPayProvider: "naverpay",
+      displayName: "네이버페이",
+      storeId: env.PORTONE_NAVERPAY_STORE_ID,
+      channelKey: env.PORTONE_NAVERPAY_CHANNEL_KEY,
+      enabled: env.PORTONE_NAVERPAY_ENABLED === "true" && enabledProviders.has("naverpay"),
+    }),
+  ].filter((account): account is ProviderAccount => account != null);
+
+  if (accounts.length > 0 || env.NODE_ENV === "production") return accounts;
+  return defaultProviderAccounts;
+}
+
+function buildProviderAccount(input: {
+  easyPayProvider: PortOneEasyPayProvider;
+  displayName: string;
+  storeId?: string;
+  channelKey?: string;
+  enabled: boolean;
+}): ProviderAccount | undefined {
+  const storeId = input.storeId?.trim();
+  const channelKey = input.channelKey?.trim();
+  if (!storeId || !channelKey) return undefined;
+
+  return {
+    id: `portone_${input.easyPayProvider}`,
+    provider: "portone",
+    paymentMethodFamily: "easy_pay",
+    easyPayProvider: input.easyPayProvider,
+    displayName: input.displayName,
+    storeId,
+    channelKey,
+    enabled: input.enabled,
   };
 }
