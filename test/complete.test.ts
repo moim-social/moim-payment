@@ -93,6 +93,24 @@ describe("complete API", () => {
     expect(events[0]).toMatchObject({ checkoutId, paymentId, status: "delivered", attempts: 1 });
   });
 
+  it("uses the requested paymentId when the PortOne response omits paymentId", async () => {
+    const { app, portone, callbacks, checkoutId, paymentId } = await createPreparedCheckout();
+    vi.mocked(portone.getPayment).mockResolvedValue(
+      paidPayment({
+        paymentId: undefined as unknown as string,
+        customData: { checkoutId, reservationId: "reservation-1", eventId: "event-1", tierId: "tier-1", easyPayProvider: "kakaopay" },
+      }),
+    );
+    const response = await app.inject({
+      method: "POST",
+      url: `/checkouts/${checkoutId}/complete`,
+      payload: { paymentId },
+    });
+    expect(response.statusCode).toBe(200);
+    const events = await callbacks.list();
+    expect(events[0]).toMatchObject({ checkoutId, paymentId, status: "delivered" });
+  });
+
   it("is idempotent after checkout is paid", async () => {
     const { app, portone, callbackSender, checkoutId, paymentId } = await createPreparedCheckout();
     vi.mocked(portone.getPayment).mockResolvedValue(

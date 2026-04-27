@@ -121,7 +121,7 @@ export class TicketPaymentService {
       throw badRequest("payment_id_mismatch", "paymentId does not match checkout payment");
     }
     const payment = await this.portone.getPayment(paymentId);
-    return this.confirmPaid(checkout, payment);
+    return this.confirmPaid(checkout, payment, paymentId);
   }
 
   async syncPortOnePayment(paymentId: string): Promise<TicketCheckout | undefined> {
@@ -129,7 +129,7 @@ export class TicketPaymentService {
     if (!checkout) return undefined;
     if (checkout.status === "paid") return checkout;
     const payment = await this.portone.getPayment(paymentId);
-    return this.confirmPaid(checkout, payment);
+    return this.confirmPaid(checkout, payment, paymentId);
   }
 
   async verifyPortOneWebhook(
@@ -156,15 +156,16 @@ export class TicketPaymentService {
     };
   }
 
-  private async confirmPaid(checkout: TicketCheckout, payment: PortOnePayment): Promise<TicketCheckout> {
+  private async confirmPaid(checkout: TicketCheckout, payment: PortOnePayment, requestedPaymentId: string): Promise<TicketCheckout> {
     if (payment.status !== "PAID") throw badRequest("payment_not_paid", "PortOne payment is not PAID");
     this.verifyPayment(checkout, payment);
 
+    const providerPaymentId = payment.paymentId ?? requestedPaymentId;
     const paidAt = new Date().toISOString();
     const paid = await this.checkouts.update({
       ...checkout,
       status: "paid",
-      providerPaymentId: payment.paymentId,
+      providerPaymentId,
       providerTxId: payment.txId ?? payment.transaction?.txId ?? payment.transaction?.id,
       rawProviderResponse: sanitizeProviderResponse(payment),
       paidAt,
