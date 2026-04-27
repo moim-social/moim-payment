@@ -6,6 +6,7 @@ CREATE TABLE ticket_checkouts (
   order_name text NOT NULL,
   amount integer NOT NULL CHECK (amount > 0),
   currency text NOT NULL,
+  customer jsonb NOT NULL,
   callback_url text NOT NULL,
   success_url text NOT NULL,
   cancel_url text NOT NULL,

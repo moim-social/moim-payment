@@ -52,6 +52,7 @@ export interface AppConfig {
   callbackSecret: string;
   portoneApiSecret: string;
   portoneWebhookSecret: string;
+  databaseUrl?: string;
   allowedOrigins: string[];
   providerAccounts: ProviderAccount[];
 }
@@ -68,6 +69,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     callbackSecret: env.TICKET_PAYMENT_CALLBACK_SECRET ?? "dev-callback-secret",
     portoneApiSecret: env.PORTONE_API_SECRET ?? "dev-portone-secret",
     portoneWebhookSecret: env.PORTONE_WEBHOOK_SECRET ?? "dev-webhook-secret",
+    databaseUrl: env.DATABASE_URL,
     allowedOrigins: (env.ALLOWED_ORIGINS ?? "https://moim.kodingwarrior.dev,https://moim.live")
       .split(",")
       .map((origin) => origin.trim())

@@ -17,3 +17,5 @@ pnpm check
 Copy `.env.example` and set production values before deploying.
 
 The service trusts checkout records created by Moim server requests, not browser-submitted amounts.
+
+Set `DATABASE_URL` in k3s/CloudNativePG deployments. Without it, the process uses the in-memory repository intended only for local development and tests.
