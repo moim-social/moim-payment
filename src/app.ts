@@ -97,6 +97,7 @@ export async function buildApp({ config, service }: AppDeps): Promise<FastifyIns
       reply.code(error.statusCode).send({ code: error.code, message: error.message });
       return;
     }
+    console.error(error);
     reply.code(500).send({ code: "internal_error", message: "Internal server error" });
   });
 
