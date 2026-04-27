@@ -6,6 +6,8 @@
   "packageManager": "pnpm@10.12.1",
   "scripts": {
     "dev": "tsx watch src/main.ts",
+    "migrate": "tsx scripts/migrate.ts",
+    "migrate:prod": "node dist/scripts/migrate.js",
     "start": "node dist/main.js",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

@@ -1,4 +1,4 @@
-CREATE TABLE ticket_checkouts (
+CREATE TABLE IF NOT EXISTS ticket_checkouts (
   id text PRIMARY KEY,
   reservation_id text NOT NULL,
   event_id text NOT NULL,
@@ -22,11 +22,11 @@ CREATE TABLE ticket_checkouts (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX ticket_checkouts_one_active_reservation
+CREATE UNIQUE INDEX IF NOT EXISTS ticket_checkouts_one_active_reservation
   ON ticket_checkouts (reservation_id)
   WHERE status IN ('requires_payment', 'payment_pending', 'paid');
 
-CREATE TABLE callback_events (
+CREATE TABLE IF NOT EXISTS callback_events (
   id text PRIMARY KEY,
   checkout_id text NOT NULL REFERENCES ticket_checkouts(id),
   payment_id text NOT NULL,
