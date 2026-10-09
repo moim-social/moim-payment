@@ -1,9 +1,10 @@
 import { readdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { Pool } from "pg";
 
-const migrationsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../migrations");
+// Resolve from the working directory so the same path works for `tsx scripts/migrate.ts` (repo root)
+// and `node dist/scripts/migrate.js` inside the container (/app), where migrations/ is copied unbuilt.
+const migrationsDir = path.resolve(process.cwd(), process.env.MIGRATIONS_DIR ?? "migrations");
 
 async function main(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
